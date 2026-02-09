@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test by ZLH🍌</title>
+
+    <style>
+        body{
+            margin:0;
+            height:100vh;
+            background:linear-gradient(#87ceeb,#bfe9ff);
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            font-family:Arial;
+        }
+
+        /* ================= MINION ================= */
+        .minion{
+            width:200px;
+            height:260px;
+            background:#ffd84d;
+            border-radius:100px 100px 80px 80px;
+            position:relative;
+            margin-bottom:30px;
+            transition:.3s;
+        }
+
+        .strap{
+            position:absolute;
+            top:80px;
+            width:100%;
+            height:15px;
+            background:black;
+        }
+
+        .eyes{
+            position:absolute;
+            top:60px;
+            width:100%;
+            display:flex;
+            justify-content:space-evenly;
+        }
+
+        .eye{
+            width:60px;
+            height:60px;
+            background:white;
+            border-radius:50%;
+            border:6px solid gray;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            overflow:hidden;
+        }
+
+        .pupil{
+            width:22px;
+            height:22px;
+            background:black;
+            border-radius:50%;
+        }
+
+        .mouth{
+            position:absolute;
+            bottom:60px;
+            left:50%;
+            transform:translateX(-50%);
+            width:80px;
+            height:40px;
+            border-bottom:6px solid black;
+            border-radius:0 0 50px 50px;
+        }
+
+        /* HANDS */
+        .hand{
+            width:60px;
+            height:80px;
+            background: black;
+            position:absolute;
+            top:180px;
+            border-radius:40px;
+            transition:.4s;
+        }
+
+        .left-hand{ left:20px; }
+        .right-hand{ right:20px; }
+
+        .cover .left-hand{ top:50px; transform:rotate(-25deg); }
+        .cover .right-hand{ top:50px; transform:rotate(25deg); }
+
+        /* SHAKE */
+        @keyframes shake{
+            0%,100%{transform:rotate(0)}
+            25%{transform:rotate(-10deg)}
+            50%{transform:rotate(10deg)}
+            75%{transform:rotate(-10deg)}
+        }
+        .shake{ animation:shake .5s }
+
+        /* ================= FORM ================= */
+        .box{
+            background:white;
+            padding:25px;
+            width:260px;
+            border-radius:15px;
+            text-align:center;
+            box-shadow:0 5px 15px rgba(0,0,0,.2);
+        }
+
+        input{
+            width:100%;
+            padding:10px;
+            margin:8px 0;
+            border-radius:8px;
+            border:1px solid #ccc;
+        }
+
+        button{
+            width:100%;
+            padding:10px;
+            margin-top:8px;
+            background:#ffd84d;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        .switch{
+            margin-top:10px;
+            font-size:13px;
+            cursor:pointer;
+            color:blue;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ================= MINION ================= -->
+<div class="minion" id="minion">
+    <div class="strap"></div>
+
+    <div class="eyes">
+        <div class="eye"><div class="pupil"></div></div>
+        <div class="eye"><div class="pupil"></div></div>
+    </div>
+
+    <div class="mouth"></div>
+
+    <div class="hand left-hand"></div>
+    <div class="hand right-hand"></div>
+</div>
+
+
+<!-- ================= AUTH BOX ================= -->
+<div class="box">
+    <h3 id="title">Login in for Your Soulmate</h3>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button id="mainBtn" onclick="handleAuth()">Login</button>
+
+    <div class="switch" onclick="toggleMode()">
+        No account? Sign up
+    </div>
+</div>
+
+
+<script>
+/* ================= EYE FOLLOW ================= */
+const pupils = document.querySelectorAll(".pupil");
+
+document.addEventListener("mousemove", e=>{
+    pupils.forEach(p=>{
+        const r = p.parentElement.getBoundingClientRect();
+        const angle = Math.atan2(e.clientY-(r.top+r.height/2),
+                                 e.clientX-(r.left+r.width/2));
+        p.style.transform =
+            `translate(${Math.cos(angle)*12}px,${Math.sin(angle)*12}px)`;
+    });
+});
+
+/* ================= COVER EYES ================= */
+const minion = document.getElementById("minion");
+document.querySelectorAll("input").forEach(i=>{
+    i.onfocus=()=>minion.classList.add("cover");
+    i.onblur=()=>minion.classList.remove("cover");
+});
+
+/* ================= AUTH SYSTEM ================= */
+
+let mode="login";
+
+function toggleMode(){
+    const title=document.getElementById("title");
+    const btn=document.getElementById("mainBtn");
+    const sw=document.querySelector(".switch");
+
+    if(mode==="login"){
+        mode="signup";
+        title.innerText="Sign Up";
+        btn.innerText="Sign Up";
+        sw.innerText="Already have account? Login";
+    }else{
+        mode="login";
+        title.innerText="Login";
+        btn.innerText="Login";
+        sw.innerText="No account? Sign up";
+    }
+}
+
+function handleAuth(){
+    if(mode==="signup") signup();
+    else login();
+}
+
+/* SAVE ACCOUNT */
+function signup(){
+    const email=emailInput();
+    const pass=passInput();
+
+    let users=JSON.parse(localStorage.getItem("users"))||[];
+
+    users.push({email,password:pass});
+    localStorage.setItem("users",JSON.stringify(users));
+
+    alert("Account created 🎉 Now login!");
+    toggleMode();
+}
+
+/* LOGIN CHECK */
+function login(){
+    const email=emailInput();
+    const pass=passInput();
+
+    const users=JSON.parse(localStorage.getItem("users"))||[];
+
+    const found=users.find(u=>u.email===email && u.password===pass);
+
+    if(found){
+        alert("Bello! Login success 😆");
+        window.location.href = "do_you_love_me.html";
+    }else{
+        minion.classList.add("shake");
+        setTimeout(()=>minion.classList.remove("shake"),500);
+    }
+}
+
+function emailInput(){
+    return document.getElementById("email").value;
+}
+function passInput(){
+    return document.getElementById("password").value;
+}
+</script>
+
+</body>
+</html>
